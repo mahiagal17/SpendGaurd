@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpendGuard — Personal Finance & Subscription Protection</title>
+  <link rel="stylesheet" href="css/common.css">
+  <style>
+    .hero-section {
+      padding: 70px 20px 40px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: var(--radius-full);
+      color: #a5b4fc;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    .hero-title {
+      font-size: 2.8rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .hero-title span {
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-desc {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      max-width: 650px;
+      margin: 0 auto 36px;
+      line-height: 1.6;
+    }
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 50px;
+    }
+
+    /* Auth state views */
+    #view-guest, #view-auth {
+      display: none;
+    }
+    #view-guest.active, #view-auth.active {
+      display: block;
+    }
+
+    /* User Profile Card */
+    .profile-card {
+      max-width: 760px;
+      margin: 0 auto 40px;
+      padding: 32px;
+    }
+    .profile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+    }
+    .profile-title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .avatar-circle {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--gradient-brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: white;
+    }
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+    .profile-field {
+      background: rgba(13, 19, 34, 0.7);
+      border: 1px solid var(--border-subtle);
+      padding: 16px;
+      border-radius: var(--radius-md);
+    }
+    .field-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .field-value {
+      font-size: 1rem;
+      color: var(--text-primary);
+      font-weight: 600;
+      word-break: break-all;
+    }
+
+    /* Modules Status Grid */
+    .modules-section {
+      max-width: 900px;
+      margin: 0 auto 50px;
+    }
+    .section-heading {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 16px;
+    }
+    .module-item {
+      padding: 20px;
+      border-radius: var(--radius-md);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      transition: all var(--transition-normal);
+    }
+    .module-item.completed {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.05);
+    }
+    .module-item.active {
+      border-color: rgba(99, 102, 241, 0.4);
+      background: rgba(99, 102, 241, 0.06);
+    }
+    .module-badge {
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+    .module-name {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .module-desc {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Danger zone */
+    .danger-zone {
+      max-width: 760px;
+      margin: 0 auto 60px;
+      padding: 24px 32px;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      background: rgba(239, 68, 68, 0.04);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="brand" id="brand-link">
+        <div class="brand-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <div class="brand-name">Spend<span>Guard</span></div>
+      </a>
+
+      <!-- Guest Nav Controls -->
+      <div id="nav-guest" class="nav-actions">
+        <a href="login.html" class="btn btn-outline btn-sm" id="nav-login-btn">Sign In</a>
+        <a href="register.html" class="btn btn-primary btn-sm" id="nav-register-btn">Create Account</a>
+      </div>
+
+      <!-- Authenticated Nav Controls -->
+      <div id="nav-auth" class="nav-actions" style="display: none;">
+        <a href="transactions.html" class="btn btn-outline btn-sm" id="nav-txns-btn">Transactions</a>
+        <a href="import.html" class="btn btn-primary btn-sm" id="nav-import-btn" style="box-shadow: none;">Import CSV</a>
+        <span id="nav-user-greeting" style="font-size: 0.9rem; color: var(--text-secondary);"></span>
+        <button id="logout-btn" class="btn btn-outline btn-sm">Log Out</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Container -->
+  <main class="container">
+
+    <!-- 1. GUEST VIEW (When not logged in) -->
+    <div id="view-guest">
+      <section class="hero-section">
+        <div class="hero-badge">
+          <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+          Privacy-First • Local SQLite • Zero Credentials Needed
+        </div>
+        <h1 class="hero-title">Protect Your Wealth From <span>Hidden Subscriptions</span> & Unseen Expenses</h1>
+        <p class="hero-desc">
+          SpendGuard runs entirely on your local bank statement exports. Ingest standard Indian bank CSVs, clean cryptic narrations, detect recurring charges, and stay protected.
+        </p>
+        <div class="hero-actions">
+          <a href="register.html" class="btn btn-primary" id="hero-start-btn">Get Started Free</a>
+          <a href="login.html" class="btn btn-outline" id="hero-login-btn">Sign In to Vault</a>
+        </div>
+      </section>
+    </div>
+
+    <!-- 2. AUTHENTICATED VIEW (When logged in) -->
+    <div id="view-auth">
+      <section style="padding: 40px 0 20px;">
+        <div class="profile-card glass-card">
+          <div class="profile-header">
+            <div class="profile-title">
+              <div class="avatar-circle" id="user-avatar">?</div>
+              <div>
+                <h2 id="user-display-name" style="font-size: 1.4rem; font-weight: 700;">Loading...</h2>
+                <span class="badge badge-success">Session Authenticated</span>
+              </div>
+            </div>
+            <div>
+              <span class="badge badge-primary">Tenant Isolated</span>
+            </div>
+          </div>
+
+          <div class="profile-grid">
+            <div class="profile-field">
+              <div class="field-label">Tenant ID</div>
+              <div class="field-value" id="field-user-id">--</div>
+            </div>
+            <div class="profile-field">
+              <div class="field-label">Registered Email</div>
+              <div class="field-value" id="field-user-email">--</div>
+            </div>
+            <div class="profile-field">
+              <div class="field-label">Member Since</div>
+              <div class="field-value" id="field-created-at">--</div>
+            </div>
+            <div class="profile-field">
+              <div class="field-label">Security Protocol</div>
+              <div class="field-value" style="color: var(--success);">Bcrypt / JWT Bearer</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Architecture & Module Pipeline Progress -->
+        <div class="modules-section">
+          <h3 class="section-heading">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            System Modules & Pipeline Progress
+          </h3>
+          <div class="modules-grid">
+            <!-- Module 1 -->
+            <div class="module-item completed">
+              <div class="module-badge">
+                <span class="badge badge-success">✓ Module 01 Active</span>
+              </div>
+              <div class="module-name">Authentication & Isolation</div>
+              <div class="module-desc">Bcrypt salted hashing, JWT verification, and strict per-tenant SQL data isolation.</div>
+            </div>
+
+            <!-- Module 2 -->
+            <div class="module-item">
+              <div class="module-badge">
+                <span class="badge badge-primary">Next: Module 02</span>
+              </div>
+              <div class="module-name">CSV Ingestion Engine</div>
+              <div class="module-desc">Upload statement exports, auto-detect columns, filter debits, deduplicate.</div>
+            </div>
+
+            <!-- Module 3 -->
+            <div class="module-item">
+              <div class="module-badge">
+                <span class="badge badge-primary">Module 03</span>
+              </div>
+              <div class="module-name">Merchant Cleaning & Categorization</div>
+              <div class="module-desc">Strip bank noise (UPI, POS, NEFT), map canonical merchants, and assign categories.</div>
+            </div>
+
+            <!-- Module 4 -->
+            <div class="module-item">
+              <div class="module-badge">
+                <span class="badge badge-primary">Module 04</span>
+              </div>
+              <div class="module-name">Recurring Payment Detection</div>
+              <div class="module-desc">Cadence analysis, weekend jitter tolerance, price hike alerts.</div>
+            </div>
+
+            <!-- Module 5 -->
+            <div class="module-item">
+              <div class="module-badge">
+                <span class="badge badge-primary">Module 05</span>
+              </div>
+              <div class="module-name">Dashboard & Trends</div>
+              <div class="module-desc">Monthly spend analytics, category breakdown charts, searchable transactions.</div>
+            </div>
+
+            <!-- Module 6 -->
+            <div class="module-item">
+              <div class="module-badge">
+                <span class="badge badge-primary">Module 06</span>
+              </div>
+              <div class="module-name">Renewal Calendar & Alerts</div>
+              <div class="module-desc">Visual monthly calendar, 30-day forecast, background node-cron reminders.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account Management & Data Cascade (EC-1.10) -->
+        <div class="danger-zone">
+          <div>
+            <h4 style="color: var(--danger); font-size: 1.05rem; margin-bottom: 4px;">Delete Account & Cascade Data</h4>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">
+              Permanently delete this account and cascade delete all transactions, recurring payments, and alerts.
+            </p>
+          </div>
+          <button id="open-delete-modal-btn" class="btn btn-danger btn-sm">Delete Account</button>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- Delete Account Confirmation Modal (EC-1.10, TC-08) -->
+  <div id="delete-modal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--danger);">Confirm Account Deletion</h3>
+        <button id="close-modal-btn" class="toast-close" style="font-size: 1.5rem;">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 14px;">
+          This action is <strong>irreversible</strong>. By entering your master password and confirming, all your data will be permanently wiped from the database.
+        </p>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="delete-password-input" class="form-label">Enter Master Password to Confirm</label>
+          <input 
+            type="password" 
+            id="delete-password-input" 
+            class="form-control" 
+            placeholder="Your password" 
+            autocomplete="current-password"
+          >
+        </div>
+        <div id="delete-error-msg" style="color: var(--danger); font-size: 0.82rem; margin-top: 8px; display: none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancel-delete-btn" class="btn btn-outline btn-sm">Cancel</button>
+        <button id="confirm-delete-btn" class="btn btn-danger btn-sm">Permanently Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const viewGuest = document.getElementById('view-guest');
+      const viewAuth = document.getElementById('view-auth');
+      const navGuest = document.getElementById('nav-guest');
+      const navAuth = document.getElementById('nav-auth');
+      const logoutBtn = document.getElementById('logout-btn');
+
+      if (!api.isAuthenticated()) {
+        viewGuest.classList.add('active');
+        navGuest.style.display = 'flex';
+        return;
+      }
+
+      // Fetch authenticated user
+      try {
+        const response = await api.auth.getMe();
+        const user = response.user;
+
+        // Render Authenticated View
+        viewAuth.classList.add('active');
+        navAuth.style.display = 'flex';
+
+        document.getElementById('nav-user-greeting').textContent = `Hi, ${user.name}`;
+        document.getElementById('user-display-name').textContent = user.name;
+        document.getElementById('user-avatar').textContent = user.name.charAt(0).toUpperCase();
+        document.getElementById('field-user-id').textContent = `#${user.id}`;
+        document.getElementById('field-user-email').textContent = user.email;
+
+        const dateStr = new Date(user.createdAt || Date.now()).toLocaleDateString('en-IN', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+        document.getElementById('field-created-at').textContent = dateStr;
+
+      } catch (err) {
+        api.clearSession();
+        viewGuest.classList.add('active');
+        navGuest.style.display = 'flex';
+      }
+
+      // Logout handler
+      logoutBtn?.addEventListener('click', () => {
+        api.auth.logout();
+      });
+
+      // Delete Account Modal handlers (EC-1.10, TC-08)
+      const deleteModal = document.getElementById('delete-modal');
+      const openModalBtn = document.getElementById('open-delete-modal-btn');
+      const closeModalBtn = document.getElementById('close-modal-btn');
+      const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+      const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+      const deletePasswordInput = document.getElementById('delete-password-input');
+      const deleteErrorMsg = document.getElementById('delete-error-msg');
+
+      openModalBtn?.addEventListener('click', () => {
+        deletePasswordInput.value = '';
+        deleteErrorMsg.style.display = 'none';
+        deleteModal.classList.add('active');
+      });
+
+      function closeModal() {
+        deleteModal.classList.remove('active');
+      }
+
+      closeModalBtn?.addEventListener('click', closeModal);
+      cancelDeleteBtn?.addEventListener('click', closeModal);
+
+      confirmDeleteBtn?.addEventListener('click', async () => {
+        const password = deletePasswordInput.value;
+        if (!password) {
+          deleteErrorMsg.textContent = 'Please enter your password.';
+          deleteErrorMsg.style.display = 'block';
+          return;
+        }
+
+        confirmDeleteBtn.disabled = true;
+        confirmDeleteBtn.textContent = 'Deleting...';
+
+        try {
+          await api.auth.deleteAccount(password);
+          api.showToast('Account successfully deleted.', 'info');
+          setTimeout(() => {
+            window.location.reload();
+          }, 600);
+        } catch (err) {
+          confirmDeleteBtn.disabled = false;
+          confirmDeleteBtn.textContent = 'Permanently Delete';
+          deleteErrorMsg.textContent = err.data?.error || err.message || 'Deletion failed';
+          deleteErrorMsg.style.display = 'block';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

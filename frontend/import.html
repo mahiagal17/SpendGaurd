@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpendGuard — CSV Statement Ingestion</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/import.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="brand" id="brand-link">
+        <div class="brand-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <div class="brand-name">Spend<span>Guard</span></div>
+      </a>
+
+      <div class="nav-actions">
+        <a href="index.html" class="btn btn-outline btn-sm" id="nav-home-btn">Overview</a>
+        <a href="import.html" class="btn btn-primary btn-sm" id="nav-import-btn" style="box-shadow: none;">Import CSV</a>
+        <button id="logout-btn" class="btn btn-outline btn-sm">Log Out</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container import-page">
+    <div class="import-header">
+      <h1 class="import-title">CSV Statement Ingestion Engine</h1>
+      <p class="import-subtitle">
+        Import your bank transactions with auto-column detection, fault-tolerant parsing, and deduplication.
+      </p>
+    </div>
+
+    <!-- Stepper Navigation -->
+    <div class="stepper">
+      <div class="step-item active" id="step-1-indicator">
+        <div class="step-circle">1</div>
+        <div class="step-label">Upload File</div>
+      </div>
+      <div class="step-item" id="step-2-indicator">
+        <div class="step-circle">2</div>
+        <div class="step-label">Map & Preview</div>
+      </div>
+      <div class="step-item" id="step-3-indicator">
+        <div class="step-circle">3</div>
+        <div class="step-label">Complete</div>
+      </div>
+    </div>
+
+    <!-- STEP 1: Upload Dropzone Panel -->
+    <section id="upload-section">
+      <div class="upload-dropzone glass-card" id="dropzone">
+        <input type="file" id="file-input" class="file-input" accept=".csv,text/csv,text/plain">
+        <div class="upload-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+        </div>
+        <h2 class="upload-title">Drag & Drop Bank CSV Statement Here</h2>
+        <p class="upload-desc">Supports statement exports up to 10MB (HDFC, SBI, ICICI, Axis, Kotak, etc.)</p>
+        <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+          <button type="button" class="btn btn-primary" id="browse-btn">
+            Browse Computer
+          </button>
+          <button type="button" class="btn btn-outline" id="load-sample-btn">
+            Load Sample Indian Bank CSV
+          </button>
+        </div>
+
+        <div class="bank-badges">
+          <span class="bank-badge">✓ HDFC Preambles Trimmed</span>
+          <span class="bank-badge">✓ SBI / ICICI Format</span>
+          <span class="bank-badge">✓ Debit / Credit Split Filter</span>
+          <span class="bank-badge">✓ UTF-8 & BOM Safe</span>
+          <span class="bank-badge">✓ Automatic Deduplication</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 2: Column Mapping & Live Preview Panel -->
+    <section id="mapping-section" class="mapping-panel">
+      <div class="panel-card glass-card">
+        <div class="mapping-header">
+          <div>
+            <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 4px;">Review Column Mappings</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">
+              Verify or adjust the auto-detected columns below before committing.
+            </p>
+          </div>
+          <div class="file-info-badge">
+            <span id="active-filename">statement.csv</span>
+            <span id="active-delimiter" class="badge badge-primary">Delimiter: ,</span>
+          </div>
+        </div>
+
+        <!-- Mapping Dropdown Selects -->
+        <div class="mapping-grid">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="select-date-col" class="form-label">Date Column</label>
+            <select id="select-date-col" class="custom-select"></select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="select-desc-col" class="form-label">Description / Narration</label>
+            <select id="select-desc-col" class="custom-select"></select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="select-amt-col" class="form-label">Amount / Debit Column</label>
+            <select id="select-amt-col" class="custom-select"></select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="select-date-format" class="form-label">Date Format</label>
+            <select id="select-date-format" class="custom-select">
+              <option value="DD/MM/YYYY">DD/MM/YYYY (Indian Standard)</option>
+              <option value="MM/DD/YYYY">MM/DD/YYYY (US Standard)</option>
+              <option value="YYYY-MM-DD">YYYY-MM-DD (ISO Format)</option>
+              <option value="DD-MMM-YYYY">DD-MMM-YYYY (e.g. 05-Aug-2026)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Live Sample Preview Table -->
+        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <span>Sample Rows Preview</span>
+          <span id="preview-count" class="badge badge-primary" style="font-size: 0.75rem;">5 Rows</span>
+        </h3>
+        <div class="preview-table-container">
+          <table class="table-custom" id="preview-table">
+            <thead id="preview-thead"></thead>
+            <tbody id="preview-tbody"></tbody>
+          </table>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px;">
+          <button type="button" class="btn btn-outline btn-sm" id="cancel-mapping-btn">
+            &larr; Choose Different File
+          </button>
+          <button type="button" class="btn btn-primary" id="confirm-import-btn">
+            Confirm & Ingest Transactions
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 3: Summary Results Panel -->
+    <section id="summary-section" style="display: none;">
+      <div class="panel-card glass-card">
+        <div style="text-align: center; margin-bottom: 28px;">
+          <div style="width: 50px; height: 50px; background: rgba(16, 185, 129, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; color: var(--success);">
+            <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 4px;">Import Batch Completed</h2>
+          <p style="color: var(--text-secondary); font-size: 0.9rem;">
+            Transactions were ingested into SQLite inside an atomic transaction.
+          </p>
+        </div>
+
+        <!-- Summary Metrics Grid -->
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="summary-num" id="sum-total">0</div>
+            <div class="summary-label">Total Rows</div>
+          </div>
+          <div class="summary-card success">
+            <div class="summary-num" id="sum-imported">0</div>
+            <div class="summary-label">Ingested</div>
+          </div>
+          <div class="summary-card warning">
+            <div class="summary-num" id="sum-duplicates">0</div>
+            <div class="summary-label">Duplicates</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-num" id="sum-skipped-credits">0</div>
+            <div class="summary-label">Credits Skipped</div>
+          </div>
+          <div class="summary-card danger">
+            <div class="summary-num" id="sum-errors">0</div>
+            <div class="summary-label">Errors</div>
+          </div>
+        </div>
+
+        <!-- Error Rows Accordion (If Any) -->
+        <div id="error-rows-container" class="error-rows-box" style="display: none;">
+          <div class="error-rows-title">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>Skipped Error Rows (<span id="error-count-badge">0</span>)</span>
+          </div>
+          <div class="error-list" id="error-list"></div>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 14px; margin-top: 28px;">
+          <button type="button" class="btn btn-outline" id="import-another-btn">Upload Another Statement</button>
+          <a href="index.html" class="btn btn-primary" id="view-dashboard-btn">Go to Dashboard</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Upload History Table Section -->
+    <section class="history-section">
+      <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Historical Upload Logs
+      </h3>
+
+      <div class="preview-table-container">
+        <table class="table-custom" id="history-table">
+          <thead>
+            <tr>
+              <th>Batch ID</th>
+              <th>Filename</th>
+              <th>Date & Time</th>
+              <th>Total Processed</th>
+              <th>Ingested</th>
+              <th>Duplicates</th>
+              <th>Errors</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody">
+            <tr>
+              <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                No statements imported yet.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/import.js"></script>
+</body>
+</html>
